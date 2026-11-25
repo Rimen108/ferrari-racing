@@ -1,0 +1,47 @@
+{
+  "rules": {
+    "rooms": {
+      "$room": {
+        "meta": {
+          ".read": "auth != null",
+          ".write": "auth != null && (data.exists() ? data.child('hostUid').val() === auth.uid : newData.child('hostUid').val() === auth.uid)"
+        },
+        "questions": {
+          ".read": "auth != null",
+          ".write": "auth != null && root.child('rooms/' + $room + '/meta/hostUid').val() === auth.uid"
+        },
+        "keys": {
+          ".read": "auth != null && root.child('rooms/' + $room + '/meta/hostUid').val() === auth.uid",
+          ".write": "auth != null && root.child('rooms/' + $room + '/meta/hostUid').val() === auth.uid"
+        },
+        "players": {
+          ".read": "auth != null",
+          "$uid": {
+            ".write": "auth != null && (root.child('rooms/' + $room + '/meta/hostUid').val() === auth.uid || ($uid === auth.uid && !data.exists() && root.child('rooms/' + $room + '/meta/status').val() === 'lobby' && newData.child('pos').val() === 0 && newData.child('ms').val() === 0))",
+            ".validate": "newData.hasChildren(['name', 'car', 'pos', 'ms'])",
+            "name": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 16" },
+            "car": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() < 12" },
+            "num": { ".validate": "newData.isNumber()" },
+            "pos": { ".validate": "newData.isNumber()" },
+            "ms": { ".validate": "newData.isNumber()" },
+            "joinedAt": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
+          }
+        },
+        "answers": {
+          ".read": "auth != null && root.child('rooms/' + $room + '/meta/hostUid').val() === auth.uid",
+          "$q": {
+            "$uid": {
+              ".read": "auth != null && $uid === auth.uid",
+              ".write": "auth != null && $uid === auth.uid && !data.exists() && root.child('rooms/' + $room + '/meta/status').val() === 'question' && (root.child('rooms/' + $room + '/meta/qIndex').val() + '') === $q && now <= root.child('rooms/' + $room + '/meta/qStart').val() + root.child('rooms/' + $room + '/meta/qTime').val() * 1000 + 3000",
+              ".validate": "newData.hasChildren(['choice', 't']) && newData.child('choice').val() >= 0 && newData.child('choice').val() <= 3 && newData.child('t').val() === now",
+              "choice": { ".validate": "newData.isNumber()" },
+              "t": { ".validate": "newData.isNumber()" },
+              "$other": { ".validate": false }
+            }
+          }
+        }
+      }
+    }
+  }
+}
